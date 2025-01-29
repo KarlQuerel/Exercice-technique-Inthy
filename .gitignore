@@ -1,0 +1,12 @@
+#---	Environment	---#
+# I usually never push .env on github but for the sake of this exercise I have to
+# .env
+
+#---	Logs and temp files	---#
+*.log
+*.tmp
+
+#---	Docker-related files	---#
+**/*.log
+*.pid
+*.seed

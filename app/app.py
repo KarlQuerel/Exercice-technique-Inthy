@@ -1,21 +1,29 @@
 #---	Imports		---#
-from datetime import datetime
-from flask import Flask, jsonify, request
-import psycopg2
+from	datetime import datetime
+from	flask import Flask, jsonify, request
+import	psycopg2
+import	os
+
+#---	Debug Flags		---#
+DEBUG = True
 
 app = Flask(__name__)
 
 # Fonction pour récupérer les données de la base
 def get_consumption_data(start_date, end_date):
 	try:
-		# Connect to the PostgreSQL database
-		conn = psycopg2.connect(
-			dbname="energy_data",
-			user="karl",
-			password="pass123",
-			host="localhost",
-			port="5432"
-		)
+		# Retrieve the database connection URL from the environment variable
+		database_url = os.environ.get('DATABASE_URL')
+
+		if not database_url:
+			raise ValueError("DATABASE_URL environment variable is not set.")
+
+		if DEBUG == True:
+			print(f"Connecting to database with URL: {database_url}")
+
+
+		# Connect to the PostgreSQL database using the connection string
+		conn = psycopg2.connect(database_url)
 
 		cur = conn.cursor()
 
@@ -86,4 +94,4 @@ def get_consumption():
 
 
 if __name__ == '__main__':
-	app.run(debug=True)
+	app.run(debug=True, host='0.0.0.0')
