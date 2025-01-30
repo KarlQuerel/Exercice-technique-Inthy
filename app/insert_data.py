@@ -1,10 +1,8 @@
-#---    Imports    ---#
-import	pandas as pd
-import	psycopg2
-from	psycopg2 import sql
-from	dotenv import load_dotenv
-from	app import DEBUG
-import	os
+import pandas as pd
+import psycopg2
+from psycopg2 import sql
+from dotenv import load_dotenv
+import os
 
 # Load environment variables from .env file
 load_dotenv()
@@ -16,39 +14,54 @@ db_password = os.getenv('POSTGRES_PASSWORD')
 db_host = os.getenv('DATABASE_HOST', 'localhost')
 db_port = os.getenv('DATABASE_PORT', '5432')
 
-# Storing into a dataframe
-file_path = '../data/RTE-Annuel-Definitif-2022.csv'
+# Storing CSV file into a dataframe
+file_path = 'data/RTE-Annuel-Definitif-2022.csv'
+
+# Load the CSV
 df = pd.read_csv(file_path)
 
-# Select only the relevant columns
-df = df[['Date', 'Consommation']]
-
-# Ensure Consommation is a numeric value and handle missing data (set to None or 0)
+# Select only relevant columns and handle missing data
+df = df[['Date', 'Heures', 'Consommation']]
 df['Consommation'] = pd.to_numeric(df['Consommation'], errors='coerce')
 
+# Remove rows where 'Consommation' is NaN
+df = df.dropna(subset=['Consommation'])
 
-if DEBUG == True:
-	print("First 5 rows of the CSV file:")
-	print(df.head())
+# Remove rows where the 'Date' is NaN
+df = df.dropna(subset=['Date'])
 
-# Connecting to the PostgreSQL database
+# Connect to the PostgreSQL database
 conn = psycopg2.connect(
-	dbname=db_name, 
-	user=db_user, 
-	password=db_password, 
-	host=db_host, 
-	port=db_port
+    dbname=db_name,
+    user=db_user,
+    password=db_password,
+    host=db_host,
+    port=db_port
 )
 
-# Creating cursor to execute queries
+# Create a cursor to execute queries
 cur = conn.cursor()
 
-# Inserting data into the database
+# Drop the table if it exists
+cur.execute("DROP TABLE IF EXISTS consommation;")
+
+# Create the table
+create_table_query = """
+CREATE TABLE consommation (
+    id SERIAL PRIMARY KEY,
+    date DATE NOT NULL,
+    heures TIME NOT NULL,
+    puissance DECIMAL(10, 2) NOT NULL
+);
+"""
+cur.execute(create_table_query)
+
+# Insert data into the database
 for index, row in df.iterrows():
-    if pd.notna(row['Consommation']):  # Only insert rows where consumption is not NaN
+    if pd.notna(row['Consommation']):
         cur.execute(
-            sql.SQL("INSERT INTO consumption_data (timestamp, consumption) VALUES (%s, %s)"),
-            [row['Date'], row['Consommation']]
+            sql.SQL("INSERT INTO consommation (date, heures, puissance) VALUES (%s, %s, %s)"),
+            [row['Date'], row['Heures'], row['Consommation']]
         )
 
 # Commit and close the connection
@@ -56,4 +69,4 @@ conn.commit()
 cur.close()
 conn.close()
 
-print("Données insérées avec succès!")
+print("Data inserted successfully!")

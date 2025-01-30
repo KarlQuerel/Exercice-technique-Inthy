@@ -1,17 +1,25 @@
-#---	Imports		---#
-import unittest
-from app import app
+import sys
+import os
+import requests
 
-class TestAPI(unittest.TestCase):
+BASE_URL = "http://localhost:5000/fetch_data" # Update to correct route
 
-	def setUp(self):
-		self.app = app.test_client()
-		self.app.testing = True
+def test_get_data_valid():
+	response = requests.get(f"{BASE_URL}?start_date=2022-01-01 00:00:00&end_date=2022-01-02 00:00:00")
+	assert response.status_code == 200, f"Expected status code 200, got {response.status_code}"
+	assert "data" in response.json(), "Expected 'data' in response but it was not found."
 
-	def test_consumption(self):
-		response = self.app.get('/consommation?start_date=2022-01-01%2006:00:00&end_date=2022-01-03%2017:00:00')
-		self.assertEqual(response.status_code, 200)
-		self.assertIn('average_consumption', response.json)
+def test_get_data_invalid_dates():
+	response = requests.get(f"{BASE_URL}?start_date=2025-01-01&end_date=invalid-date")
+	assert response.status_code == 400, f"Expected status code 400 for invalid date format, got {response.status_code}"
+	assert "error" in response.json(), "Expected error message, but it was not returned."
 
-if __name__ == '__main__':
-	unittest.main()
+def test_missing_dates():
+	response = requests.get(f"{BASE_URL}?start_date=2025-01-01")
+	assert response.status_code == 400, f"Expected status code 400 when 'end_date' is missing, got {response.status_code}"
+	assert "error" in response.json(), "Expected error message for missing 'end_date'."
+
+	response = requests.get(f"{BASE_URL}?end_date=2025-01-02")
+	assert response.status_code == 400, f"Expected status code 400 when 'start_date' is missing, got {response.status_code}"
+	assert "error" in response.json(), "Expected error message for missing 'start_date'."
+

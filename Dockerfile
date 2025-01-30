@@ -16,5 +16,6 @@ COPY ./app /app
 # Exposing port 5000
 EXPOSE 5000
 
-# Launching Flask app
+# Note : This command is overriden by docker-compose.yml but I kept it here as a fallback
+# in case we need to run the container manually
 CMD ["python", "app.py"]

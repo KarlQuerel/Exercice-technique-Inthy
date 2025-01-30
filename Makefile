@@ -2,7 +2,9 @@
 IMAGE_NAME		= energy-api
 CONTAINER_NAME	= energy-app
 PORT			= 5000
+TEST_DIR		= tests
 
+#---	DOCKER	---#
 #---	Build the Docker image	---#
 build:
 	docker-compose build
@@ -22,4 +24,9 @@ clean: stop
 #---	Rebuild and restart the container	---#
 restart: clean run
 
-.PHONY: build run stop clean restart
+#---	Testing	---#
+test:
+	python3 -m pytest $(TEST_DIR)
+
+
+.PHONY: build run stop clean restart test
