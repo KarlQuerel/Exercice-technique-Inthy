@@ -1,27 +1,31 @@
-#--- Imports ---#
+#---	Imports		---#
 from datetime import datetime
-from flask import Flask, jsonify, request
-import psycopg2
-import os
+from flask import Flask, jsonify, request # Flask is a micro web framework for Python
+import psycopg2 # PostgreSQL adapter for Python
+import os # This module provides a way of using operating system dependent functionality
+from	flask_cors import CORS # Flask extension for CORS (bonus)
 
-#--- Debug Flag ---#
+#---	Debug Flag		---#
 DEBUG = True
 
+# Initializes the Flask app
 app = Flask(__name__)
 
-# Function to retrieve consumption data from the database
+# Enables Cross-Origin Resource Sharing for the API (bonus)
+CORS(app)
+
+# Retrieves consumption data from a PostgreSQL database based on the date and time range.
 def get_consumption_data(start_datetime, end_datetime):
 	try:
-		# Retrieve the database connection URL from environment variables
 		database_url = os.getenv('DATABASE_URL')
 
 		if not database_url:
 			raise ValueError("DATABASE_URL environment variable is not set.")
 
-		if DEBUG:
+		if DEBUG == True:
 			print(f"Connecting to database with URL: {database_url}")
 
-		# Connect to PostgreSQL
+		# Connects to PostgreSQL using psycopg2
 		conn = psycopg2.connect(database_url)
 		cur = conn.cursor()
 
@@ -32,7 +36,7 @@ def get_consumption_data(start_datetime, end_datetime):
 			WHERE (date + heures) BETWEEN %s AND %s;
 		"""
 
-		if DEBUG:
+		if DEBUG == True:
 			print(f"Executing Query: {query} with values ({start_datetime}, {end_datetime})")
 
 		cur.execute(query, (start_datetime, end_datetime))
@@ -61,7 +65,7 @@ def get_consumption():
 		end_date = request.args.get('end_date', '2022-01-03 17:00:00')
 
 		# Debugging
-		if DEBUG:
+		if DEBUG == True:
 			print(f"Received start_date: {start_date}, end_date: {end_date}")
 
 		# Validate inputs
@@ -82,14 +86,14 @@ def get_consumption():
 			return jsonify({'error': 'No data found for the given date range'}), 404
 
 		# Calculate the average consumption and round it to 2 decimal places
-		total_consumption = sum(row[2] for row in data)  # row[2] is puissance
+		total_consumption = sum(row[2] for row in data)
 		average_consumption = round(total_consumption / len(data), 2) if data else 0
 
 		# Return response as JSON
 		return jsonify({
 			'average_consumption': average_consumption,
 			'data': [
-				{'datetime': f"{row[0]} {row[1]}", 'consommation': str(row[2])}  # Combine date & time
+				{'datetime': f"{row[0]} {row[1]}", 'consommation': str(row[2])}
 				for row in data
 			]
 		})
@@ -97,5 +101,6 @@ def get_consumption():
 	except Exception as e:
 		return jsonify({'error': str(e)}), 400
 
+# host='0.0.0.0' makes the server publicly available
 if __name__ == '__main__':
 	app.run(debug=True, host='0.0.0.0')

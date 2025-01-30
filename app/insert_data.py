@@ -1,6 +1,7 @@
-import pandas as pd
+#---	Imports		---#
+import pandas as pd # data manipulation library
 import psycopg2
-from psycopg2 import sql
+from psycopg2 import sql # SQL string composition
 from dotenv import load_dotenv
 import os
 

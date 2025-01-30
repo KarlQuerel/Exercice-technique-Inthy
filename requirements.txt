@@ -1,7 +1,17 @@
+# Web framework
 Flask
+
+# PostgreSQL adapter
 psycopg2-binary
+
+# Data handling
 pandas
 python-dotenv
+
+# Testing
 pytest
 flask-testing
 requests
+
+# CORS handling
+flask-cors

@@ -31,6 +31,24 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: energy-frontend
+    ports:
+      - "5001:5000"
+    depends_on:
+      - app
+    networks:
+      - mynetwork
+    volumes:
+      - ./frontend:/frontend
+    command: ["npx", "serve", "public", "-l", "5000"]
+    environment:
+      - NODE_ENV=production
+    restart: always
+
 networks:
   mynetwork:
     driver: bridge
