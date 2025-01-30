@@ -24,9 +24,12 @@ clean: stop
 #---	Rebuild and restart the container	---#
 restart: clean run
 
+#---	Inserting Data	---#
+insert:
+	python3 app/insert_data.py
+
 #---	Testing	---#
 test:
 	python3 -m pytest $(TEST_DIR)
 
-
-.PHONY: build run stop clean restart test
+.PHONY: build run stop clean restart insert test
